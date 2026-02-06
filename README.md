@@ -45,6 +45,14 @@ Best for VPS (DigitalOcean, AWS, etc.) or servers with a Public IP.
    - Use `http://<your-vps-ip>:3000` for quick testing (Cleartext is enabled in the dev build).
 4. **Server URL**: Your URL will be `http://<your-ip>:3000` or `https://<your-domain>`.
 
+#### Option C: Tailscale / VPN (Secure & Recommended)
+Install Tailscale on both your VPS and Android device. This creates a secure private network.
+1. Install Tailscale on VPS and Login.
+2. Install Tailscale on Android and Login.
+3. Use the VPS Tailscale IP (e.g., `http://100.x.y.z:3000`).
+
+**Note**: We have enabled Cleartext Traffic, so HTTP over VPN works fine.
+
 ---
 
 ## How to Run
