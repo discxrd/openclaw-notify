@@ -1,0 +1,43 @@
+import { AudioBufferBaseSourceNodeOptions, AudioContextOptions, ContextState, DecodeDataInput, IIRFilterNodeOptions, PeriodicWaveConstraints } from '../types';
+import AnalyserNode from './AnalyserNode';
+import AudioBuffer from './AudioBuffer';
+import AudioBufferSourceNode from './AudioBufferSourceNode';
+import AudioDestinationNode from './AudioDestinationNode';
+import BaseAudioContext from './BaseAudioContext';
+import BiquadFilterNode from './BiquadFilterNode';
+import ConvolverNode from './ConvolverNode';
+import { ConvolverNodeOptions } from './ConvolverNodeOptions';
+import DelayNode from './DelayNode';
+import GainNode from './GainNode';
+import IIRFilterNode from './IIRFilterNode';
+import OscillatorNode from './OscillatorNode';
+import PeriodicWave from './PeriodicWave';
+import StereoPannerNode from './StereoPannerNode';
+import ConstantSourceNode from './ConstantSourceNode';
+import WaveShaperNode from './WaveShaperNode';
+export default class AudioContext implements BaseAudioContext {
+    readonly context: globalThis.AudioContext;
+    readonly destination: AudioDestinationNode;
+    readonly sampleRate: number;
+    constructor(options?: AudioContextOptions);
+    get currentTime(): number;
+    get state(): ContextState;
+    createOscillator(): OscillatorNode;
+    createConstantSource(): ConstantSourceNode;
+    createGain(): GainNode;
+    createDelay(maxDelayTime?: number): DelayNode;
+    createStereoPanner(): StereoPannerNode;
+    createBiquadFilter(): BiquadFilterNode;
+    createIIRFilter(options: IIRFilterNodeOptions): IIRFilterNode;
+    createConvolver(options?: ConvolverNodeOptions): ConvolverNode;
+    createBufferSource(options?: AudioBufferBaseSourceNodeOptions): Promise<AudioBufferSourceNode>;
+    createBuffer(numOfChannels: number, length: number, sampleRate: number): AudioBuffer;
+    createPeriodicWave(real: Float32Array, imag: Float32Array, constraints?: PeriodicWaveConstraints): PeriodicWave;
+    createAnalyser(): AnalyserNode;
+    createWaveShaper(): WaveShaperNode;
+    decodeAudioData(source: DecodeDataInput, fetchOptions?: RequestInit): Promise<AudioBuffer>;
+    close(): Promise<void>;
+    resume(): Promise<void>;
+    suspend(): Promise<void>;
+}
+//# sourceMappingURL=AudioContext.d.ts.map

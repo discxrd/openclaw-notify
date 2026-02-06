@@ -1,0 +1,32 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = changePlaybackSpeed;
+var _AudioBuffer = _interopRequireDefault(require("./AudioBuffer"));
+var _errors = require("../errors");
+function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
+class AudioStretcher {
+  static instance = null;
+  constructor() {
+    this.stretcher = global.createAudioStretcher();
+  }
+  static getInstance() {
+    if (!AudioStretcher.instance) {
+      AudioStretcher.instance = new AudioStretcher();
+    }
+    return AudioStretcher.instance;
+  }
+  async changePlaybackSpeedInstance(input, playbackSpeed) {
+    const buffer = await this.stretcher.changePlaybackSpeed(input.buffer, playbackSpeed);
+    if (!buffer) {
+      throw new _errors.AudioApiError('Failed to change playback speed');
+    }
+    return new _AudioBuffer.default(buffer);
+  }
+}
+async function changePlaybackSpeed(input, playbackSpeed) {
+  return AudioStretcher.getInstance().changePlaybackSpeedInstance(input, playbackSpeed);
+}
+//# sourceMappingURL=AudioStretcher.js.map

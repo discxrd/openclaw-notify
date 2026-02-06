@@ -51,3 +51,4 @@
 - Split CI workflow changes from functional logic and documentation to maintain clean, revertible history.
 ### Trigger Scripts
 - Supporting command-line arguments (process.argv) improves utility flexibility without breaking backwards compatibility via fallbacks.
+- Patching react-native-full-screen-notification-incoming-call: Fixed ReactFragment.Builder API breaking change for RN 0.76+ compatibility using patch-package.

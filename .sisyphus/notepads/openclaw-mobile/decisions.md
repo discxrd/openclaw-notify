@@ -8,3 +8,4 @@
 - Added 'npm install' to the GitHub Actions workflow before Gradle build to ensure JS dependencies are available for React Native's bundling process.
 ### Trigger Utility Flexibility
 - Modified trigger-call.js and trigger-notify.js to accept dynamic deviceId via process.argv[2] while defaulting to 'android-main' for stability.
+- Compatibility: RN 0.83 requires patching older native modules that use deprecated ReactFragment.Builder patterns.

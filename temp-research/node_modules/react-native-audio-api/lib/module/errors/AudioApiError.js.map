@@ -1,0 +1,1 @@
+{"version":3,"names":["AudioApiError","Error","constructor","message","name"],"sourceRoot":"../../../src","sources":["errors/AudioApiError.ts"],"mappings":";;AAAA,MAAMA,aAAa,SAASC,KAAK,CAAC;EAChCC,WAAWA,CAACC,OAAe,EAAE;IAC3B,KAAK,CAACA,OAAO,CAAC;IACd,IAAI,CAACC,IAAI,GAAG,eAAe;EAC7B;AACF;AAEA,eAAeJ,aAAa","ignoreList":[]}

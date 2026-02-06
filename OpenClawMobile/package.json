@@ -8,7 +8,7 @@
 		"lint": "eslint .",
 		"start": "react-native start",
 		"test": "jest",
-		"postinstall": "patch-package"
+		"postinstall": ""
 	},
 	"dependencies": {
 		"@notifee/react-native": "^9.1.8",
@@ -19,7 +19,6 @@
 		"react": "19.2.0",
 		"react-native": "0.83.1",
 		"react-native-device-info": "^15.0.1",
-		"react-native-full-screen-notification-incoming-call": "^1.1.0",
 		"react-native-live-audio-stream": "^1.1.1",
 		"react-native-pcm-player": "^0.2.15",
 		"react-native-permissions": "^5.4.4",
