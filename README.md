@@ -56,12 +56,21 @@ npm install
 node server.js
 ```
 
-### 2. Run the Android App
+### 2. Run the Android App (Choose One)
+
+#### Option A: Local Build (Requires Android SDK)
 ```bash
 cd OpenClawMobile
 npm install
 npx react-native run-android
 ```
+
+#### Option C: Cloud Build (No SDK Installed)
+If you don't have the Android SDK installed locally, you can build the APK using GitHub Actions.
+1. Push this code to a GitHub repository.
+2. Go to the "Actions" tab.
+3. Select the "Build Android APK" workflow.
+4. Once finished, download the `app-debug` artifact.
 
 ### 3. Test the System
 **To Pair the Device:**
