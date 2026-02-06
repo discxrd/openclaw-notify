@@ -2,7 +2,7 @@ diff --git a/node_modules/react-native-full-screen-notification-incoming-call/an
 index 1234567..abcdefg 100644
 --- a/node_modules/react-native-full-screen-notification-incoming-call/android/src/main/java/com/reactnativefullscreennotificationincomingcall/IncomingCallActivity.java
 +++ b/node_modules/react-native-full-screen-notification-incoming-call/android/src/main/java/com/reactnativefullscreennotificationincomingcall/IncomingCallActivity.java
-@@ -92,10 +92,11 @@ public class IncomingCallActivity extends AppCompatActivity implements DefaultH
+@@ -92,10 +92,12 @@ public class IncomingCallActivity extends AppCompatActivity implements DefaultH
      if (bundle.containsKey("mainComponent") && bundle.getString("mainComponent") != null) {
        String mainComponent = bundle.getString("mainComponent");
        setContentView(R.layout.custom_ingcoming_call_rn);
@@ -10,10 +10,11 @@ index 1234567..abcdefg 100644
 -        .setComponentName(mainComponent)
 -        .setLaunchOptions(bundle)
 -        .build();
-+      // Fixed for React Native 0.76+ (Builder methods no longer return Builder)
++      // Fixed for React Native 0.76+ (explicit cast to resolve diamond inheritance ambiguity)
 +      ReactFragment.Builder fragmentBuilder = new ReactFragment.Builder();
-+      fragmentBuilder.setComponentName(mainComponent);
-+      fragmentBuilder.setLaunchOptions(bundle);
++      // Cast to ReactFragment.Builder to resolve method ambiguity
++      ((com.facebook.react.ReactFragment.Builder) fragmentBuilder).setComponentName(mainComponent);
++      ((com.facebook.react.ReactFragment.Builder) fragmentBuilder).setLaunchOptions(bundle);
 +      Fragment reactNativeFragment = fragmentBuilder.build();
  
        getSupportFragmentManager()
