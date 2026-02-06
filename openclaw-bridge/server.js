@@ -124,7 +124,19 @@ const GEMINI_URL =
 const wss = new WebSocket.Server({ server });
 
 wss.on("connection", (appSocket) => {
-	console.log("App connected for audio");
+	console.log("App connected for audio session");
+
+	if (!process.env.GEMINI_API_KEY) {
+		console.error("GEMINI_API_KEY is missing in .env");
+		appSocket.send(
+			JSON.stringify({
+				type: "error",
+				message: "Server configuration error: Missing API Key",
+			}),
+		);
+		appSocket.close();
+		return;
+	}
 
 	// 1. Connect to Gemini (with Auth Header)
 	const geminiWs = new WebSocket(GEMINI_URL, {
@@ -132,7 +144,7 @@ wss.on("connection", (appSocket) => {
 	});
 
 	geminiWs.on("open", () => {
-		console.log("Connected to Gemini");
+		console.log("Connected to Gemini Multimodal Live API");
 		// 2. Initial Setup (Model Config)
 		const setupMsg = {
 			setup: {
@@ -151,19 +163,19 @@ wss.on("connection", (appSocket) => {
 	// 3. Relay: App Audio -> Gemini
 	appSocket.on("message", (data) => {
 		try {
-			const { type, payload } = JSON.parse(data);
-			if (type === "audio" && geminiWs.readyState === WebSocket.OPEN) {
+			const message = JSON.parse(data);
+			if (message.type === "audio" && geminiWs.readyState === WebSocket.OPEN) {
 				// Gemini expects "realtimeInput" with "mediaChunks"
 				geminiWs.send(
 					JSON.stringify({
 						realtimeInput: {
-							mediaChunks: [{ mimeType: "audio/pcm", data: payload }],
+							mediaChunks: [{ mimeType: "audio/pcm", data: message.payload }],
 						},
 					}),
 				);
 			}
-		} catch (e) {
-			console.error("Error processing app message:", e);
+		} catch (error) {
+			console.error("Error processing app audio message:", error);
 		}
 	});
 
@@ -171,27 +183,54 @@ wss.on("connection", (appSocket) => {
 	geminiWs.on("message", (msg) => {
 		try {
 			const response = JSON.parse(msg);
+
+			// Handle setup completion
+			if (response.setupComplete) {
+				console.log("Gemini setup complete");
+				return;
+			}
+
+			// Gemini 2.0 Flash Live API response structure
 			const audioData =
 				response.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
 			if (audioData) {
 				appSocket.send(JSON.stringify({ type: "audio", payload: audioData }));
 			}
-		} catch (e) {
-			console.error("Error processing Gemini message:", e);
+		} catch (error) {
+			console.error("Error processing Gemini message:", error);
 		}
 	});
 
-	geminiWs.on("error", (err) => {
-		console.error("Gemini WebSocket error:", err);
+	geminiWs.on("error", (error) => {
+		console.error("Gemini WebSocket error:", error);
+		if (appSocket.readyState === WebSocket.OPEN) {
+			appSocket.send(
+				JSON.stringify({ type: "error", message: "Gemini connection error" }),
+			);
+		}
+	});
+
+	appSocket.on("error", (error) => {
+		console.error("App WebSocket error:", error);
 	});
 
 	// Cleanup
 	appSocket.on("close", () => {
 		console.log("App socket closed");
-		geminiWs.close();
+		if (
+			geminiWs.readyState === WebSocket.OPEN ||
+			geminiWs.readyState === WebSocket.CONNECTING
+		) {
+			geminiWs.close();
+		}
 	});
 	geminiWs.on("close", () => {
 		console.log("Gemini socket closed");
-		appSocket.close();
+		if (
+			appSocket.readyState === WebSocket.OPEN ||
+			appSocket.readyState === WebSocket.CONNECTING
+		) {
+			appSocket.close();
+		}
 	});
 });
