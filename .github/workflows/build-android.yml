@@ -48,16 +48,16 @@ jobs:
         run: npm install --legacy-peer-deps
         working-directory: OpenClawMobile
 
-      - name: Build with Gradle (Optimized)
+      - name: Build Release APK with Gradle
         working-directory: OpenClawMobile/android
         env:
           GRADLE_OPTS: "-Dorg.gradle.daemon=true -Dorg.gradle.parallel=true -Dorg.gradle.caching=true -Dorg.gradle.jvmargs=-Xmx4g"
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug --build-cache --parallel
+          ./gradlew assembleRelease --build-cache --parallel
 
       - name: Upload APK Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: apk-debug
-          path: OpenClawMobile/android/app/build/outputs/apk/debug/*.apk
+          name: apk-release
+          path: OpenClawMobile/android/app/build/outputs/apk/release/*.apk
