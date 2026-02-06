@@ -35,6 +35,10 @@ jobs:
             fi
           fi
 
+      - name: Install JS dependencies
+        run: npm install
+        working-directory: OpenClawMobile
+
       - name: Build with Gradle
         working-directory: OpenClawMobile/android
         run: |
