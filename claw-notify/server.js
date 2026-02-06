@@ -33,7 +33,7 @@ if (fs.existsSync(serviceAccountPath)) {
 const devices = new Map();
 
 app.get("/", (req, res) => {
-	res.send("OpenClaw Bridge Server Running");
+	res.send("Claw Notify Server Running");
 });
 
 // Register device FCM token

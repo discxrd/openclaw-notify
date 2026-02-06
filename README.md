@@ -1,6 +1,8 @@
-# OpenClaw Mobile & Bridge
+# Claw Notify
 
 A React Native Android companion app for OpenClaw, featuring FCM background wakeups and Gemini Multimodal Live (2-way voice).
+
+## Server Component: `claw-notify/`
 
 ## Prerequisites (User Action Required)
 
@@ -13,12 +15,12 @@ A React Native Android companion app for OpenClaw, featuring FCM background wake
 5. Go to Project Settings -> Service Accounts.
 6. Generate a new private key.
 7. Save the file as `serviceAccountKey.json` and place it in:
-   `openclaw-bridge/serviceAccountKey.json`
+   `claw-notify/serviceAccountKey.json`
 
 ### 2. Gemini API Key
 1. Go to [Google AI Studio](https://aistudio.google.com/).
 2. Get a Free Tier API Key.
-3. Create a `.env` file in `openclaw-bridge/`:
+3. Create a `.env` file in `claw-notify/`:
    ```env
    GEMINI_API_KEY=your_api_key_here
    PORT=3000
@@ -59,7 +61,7 @@ Install Tailscale on both your VPS and Android device. This creates a secure pri
 
 ### 1. Start the Bridge Server
 ```bash
-cd openclaw-bridge
+cd claw-notify
 npm install
 node server.js
 ```
@@ -97,13 +99,13 @@ In a new terminal:
 ```bash
 # Replace SERVER_URL with your Cloudflare URL (wss://...)
 # If testing on Emulator, you can skip PUBLIC_URL and it defaults to mock
-cd openclaw-bridge
+cd claw-notify
 node trigger-call.js
 ```
 
 **To Send a Notification:**
 ```bash
-cd openclaw-bridge
+cd claw-notify
 node trigger-notify.js
 ```
 
