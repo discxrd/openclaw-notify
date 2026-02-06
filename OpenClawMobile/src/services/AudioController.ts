@@ -1,8 +1,7 @@
 import LiveAudioStream from "react-native-live-audio-stream";
-import { AudioContext } from "react-native-audio-api";
+import { Audio } from "expo-av";
 
 let ws: WebSocket | null = null;
-let audioContext: AudioContext | null = null;
 
 const inputOptions = {
 	sampleRate: 16000,
@@ -12,27 +11,88 @@ const inputOptions = {
 	bufferSize: 4096,
 };
 
-// Decode base64 PCM to Float32Array
-const decodeBase64PCM = (base64: string): Float32Array => {
+const createWavHeader = (dataLength: number): Uint8Array => {
+	const header = new ArrayBuffer(44);
+	const view = new DataView(header);
+
+	// RIFF identifier
+	view.setUint8(0, "R".charCodeAt(0));
+	view.setUint8(1, "I".charCodeAt(0));
+	view.setUint8(2, "F".charCodeAt(0));
+	view.setUint8(3, "F".charCodeAt(0));
+	// RIFF chunk length
+	view.setUint32(4, 36 + dataLength, true);
+	// RIFF type
+	view.setUint8(8, "W".charCodeAt(0));
+	view.setUint8(9, "A".charCodeAt(0));
+	view.setUint8(10, "V".charCodeAt(0));
+	view.setUint8(11, "E".charCodeAt(0));
+	// format chunk identifier
+	view.setUint8(12, "f".charCodeAt(0));
+	view.setUint8(13, "m".charCodeAt(0));
+	view.setUint8(14, "t".charCodeAt(0));
+	view.setUint8(15, " ".charCodeAt(0));
+	// format chunk length
+	view.setUint32(16, 16, true);
+	// sample format (1 is PCM)
+	view.setUint16(20, 1, true);
+	// channel count
+	view.setUint16(22, 1, true);
+	// sample rate
+	view.setUint32(24, 24000, true);
+	// byte rate (sample rate * block align)
+	view.setUint32(28, 24000 * 2, true);
+	// block align (channel count * bytes per sample)
+	view.setUint16(32, 2, true);
+	// bits per sample
+	view.setUint16(34, 16, true);
+	// data chunk identifier
+	view.setUint8(36, "d".charCodeAt(0));
+	view.setUint8(37, "a".charCodeAt(0));
+	view.setUint8(38, "t".charCodeAt(0));
+	view.setUint8(39, "a".charCodeAt(0));
+	// data chunk length
+	view.setUint32(40, dataLength, true);
+
+	return new Uint8Array(header);
+};
+
+// Convert base64 to Uint8Array
+const base64ToUint8Array = (base64: string): Uint8Array => {
 	const binaryString = atob(base64);
 	const bytes = new Uint8Array(binaryString.length);
 	for (let i = 0; i < binaryString.length; i++) {
 		bytes[i] = binaryString.charCodeAt(i);
 	}
-	const int16Array = new Int16Array(bytes.buffer);
-	const float32Array = new Float32Array(int16Array.length);
-	for (let i = 0; i < int16Array.length; i++) {
-		float32Array[i] = int16Array[i] / 32768.0;
-	}
-	return float32Array;
+	return bytes;
 };
 
-export const startAudioSession = (serverUrl: string) => {
-	console.log("Starting audio session with:", serverUrl);
-	ws = new WebSocket(serverUrl);
+// Convert Uint8Array to base64
+const uint8ArrayToBase64 = (array: Uint8Array): string => {
+	let binary = "";
+	const len = array.byteLength;
+	for (let i = 0; i < len; i++) {
+		binary += String.fromCharCode(array[i]);
+	}
+	return btoa(binary);
+};
 
-	// Initialize Web Audio API context
-	audioContext = new AudioContext({ sampleRate: 24000 });
+export const startSession = async (serverUrl: string) => {
+	console.log("Starting audio session with:", serverUrl);
+
+	try {
+		await Audio.setAudioModeAsync({
+			allowsRecordingIOS: true,
+			playsInSilentModeIOS: true,
+			staysActiveInBackground: true,
+			shouldDuckAndroid: true,
+			playThroughEarpieceAndroid: false,
+		});
+	} catch (e) {
+		console.error("Error setting audio mode:", e);
+	}
+
+	ws = new WebSocket(serverUrl);
 
 	LiveAudioStream.init(inputOptions);
 
@@ -52,19 +112,31 @@ export const startAudioSession = (serverUrl: string) => {
 		}
 	});
 
-	// 2. Server -> Speaker (using Web Audio API)
-	ws.onmessage = (event) => {
+	// 2. Server -> Speaker (using expo-av)
+	ws.onmessage = async (event) => {
 		try {
 			const { type, payload } = JSON.parse(event.data);
-			if (type === "audio" && audioContext) {
-				const pcmData = decodeBase64PCM(payload);
-				const buffer = audioContext.createBuffer(1, pcmData.length, 24000);
-				buffer.getChannelData(0).set(pcmData);
+			if (type === "audio") {
+				const pcmData = base64ToUint8Array(payload);
+				const wavHeader = createWavHeader(pcmData.length);
+				const wavData = new Uint8Array(wavHeader.length + pcmData.length);
+				wavData.set(wavHeader);
+				wavData.set(pcmData, wavHeader.length);
 
-				const source = audioContext.createBufferSource();
-				source.buffer = buffer;
-				source.connect(audioContext.destination);
-				source.start();
+				const base64Wav = uint8ArrayToBase64(wavData);
+				const uri = `data:audio/wav;base64,${base64Wav}`;
+
+				const { sound } = await Audio.Sound.createAsync(
+					{ uri },
+					{ shouldPlay: true },
+				);
+
+				// Clean up sound after it finishes playing
+				sound.setOnPlaybackStatusUpdate((status) => {
+					if (status.isLoaded && status.didJustFinish) {
+						sound.unloadAsync();
+					}
+				});
 			} else if (type === "error") {
 				console.error("Server error:", payload);
 			}
@@ -75,15 +147,13 @@ export const startAudioSession = (serverUrl: string) => {
 
 	ws.onclose = () => {
 		console.log("WebSocket closed");
-		stopAudioSession();
+		stopSession();
 	};
 };
 
-export const stopAudioSession = () => {
+export const stopSession = () => {
 	console.log("Stopping audio session");
 	LiveAudioStream.stop();
-	audioContext?.close();
-	audioContext = null;
 	ws?.close();
 	ws = null;
 };

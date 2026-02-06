@@ -5,7 +5,7 @@ import notifee, {
 	EventType,
 } from "@notifee/react-native";
 import { DeviceEventEmitter } from "react-native";
-import { startAudioSession, stopAudioSession } from "./AudioController";
+import { startSession, stopSession } from "./AudioController";
 import { startCallForeground, stopCallForeground } from "./ForegroundService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -119,7 +119,7 @@ const handleAction = async (
 		}
 
 		console.log("Connecting to Audio Bridge:", serverUrl);
-		startAudioSession(serverUrl);
+		startSession(serverUrl);
 
 		DeviceEventEmitter.emit("call_answered", { uuid: activeCallData?.uuid });
 	} else if (actionId === "decline") {
@@ -135,7 +135,7 @@ export const endCall = async () => {
 	if (activeCallData?.uuid) {
 		await notifee.cancelNotification(activeCallData.uuid);
 	}
-	stopAudioSession();
+	stopSession();
 	stopCallForeground();
 	activeCallData = null;
 	DeviceEventEmitter.emit("call_ended");
