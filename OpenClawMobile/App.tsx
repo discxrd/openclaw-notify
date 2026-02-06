@@ -44,13 +44,24 @@ function App(): React.JSX.Element {
 
 		const requestPermissions = async () => {
 			if (Platform.OS === "android") {
-				// Request Microphone permission
-				await request(PERMISSIONS.ANDROID.RECORD_AUDIO);
+				try {
+					// Request Microphone permission
+					const micPermission = PERMISSIONS.ANDROID.RECORD_AUDIO;
+					if (micPermission) {
+						await request(micPermission);
+					}
 
-				// Request Notification permission (Android 13+)
-				if (Platform.Version >= 33) {
-					// @ts-ignore: POST_NOTIFICATIONS exists in newer permissions versions
-					await request(PERMISSIONS.ANDROID.POST_NOTIFICATIONS);
+					// Request Notification permission (Android 13+)
+					if (Platform.Version >= 33) {
+						// POST_NOTIFICATIONS may not exist in older library versions
+						const notifPermission = (PERMISSIONS.ANDROID as any)
+							.POST_NOTIFICATIONS;
+						if (notifPermission) {
+							await request(notifPermission);
+						}
+					}
+				} catch (permError) {
+					console.warn("Permission request failed:", permError);
 				}
 
 				// Create default notification channel
