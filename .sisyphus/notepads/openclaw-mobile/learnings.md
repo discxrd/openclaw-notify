@@ -47,3 +47,7 @@
 - Renamed GOOGLE_GENAI_API_KEY to GEMINI_API_KEY to match server.js expectations.
 
 - Updated README.md to guide users on setting up GOOGLE_SERVICES_JSON as a GitHub Secret for Cloud Build, improving security by avoiding committing the file.
+### Atomic Commit Strategy
+- Split CI workflow changes from functional logic and documentation to maintain clean, revertible history.
+### Trigger Scripts
+- Supporting command-line arguments (process.argv) improves utility flexibility without breaking backwards compatibility via fallbacks.
