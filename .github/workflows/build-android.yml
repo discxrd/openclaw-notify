@@ -56,8 +56,8 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug --build-cache --parallel
 
-      - name: Upload APK Artifact
+      - name: Upload APK Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug
-          path: OpenClawMobile/android/app/build/outputs/apk/debug/app-debug.apk
+          name: apk-debug
+          path: OpenClawMobile/android/app/build/outputs/apk/debug/*.apk
