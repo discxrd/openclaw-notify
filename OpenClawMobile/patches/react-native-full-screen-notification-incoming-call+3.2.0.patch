@@ -1,0 +1,20 @@
+diff --git a/node_modules/react-native-full-screen-notification-incoming-call/android/src/main/java/com/reactnativefullscreennotificationincomingcall/IncomingCallActivity.java b/node_modules/react-native-full-screen-notification-incoming-call/android/src/main/java/com/reactnativefullscreennotificationincomingcall/IncomingCallActivity.java
+index 1234567..abcdefg 100644
+--- a/node_modules/react-native-full-screen-notification-incoming-call/android/src/main/java/com/reactnativefullscreennotificationincomingcall/IncomingCallActivity.java
++++ b/node_modules/react-native-full-screen-notification-incoming-call/android/src/main/java/com/reactnativefullscreennotificationincomingcall/IncomingCallActivity.java
+@@ -92,10 +92,11 @@ public class IncomingCallActivity extends AppCompatActivity implements DefaultH
+     if (bundle.containsKey("mainComponent") && bundle.getString("mainComponent") != null) {
+       String mainComponent = bundle.getString("mainComponent");
+       setContentView(R.layout.custom_ingcoming_call_rn);
+-      Fragment reactNativeFragment = new ReactFragment.Builder()
+-        .setComponentName(mainComponent)
+-        .setLaunchOptions(bundle)
+-        .build();
++      // Fixed for React Native 0.76+ (Builder methods no longer return Builder)
++      ReactFragment.Builder fragmentBuilder = new ReactFragment.Builder();
++      fragmentBuilder.setComponentName(mainComponent);
++      fragmentBuilder.setLaunchOptions(bundle);
++      Fragment reactNativeFragment = fragmentBuilder.build();
+ 
+       getSupportFragmentManager()
+         .beginTransaction()
