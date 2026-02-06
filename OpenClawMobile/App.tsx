@@ -64,6 +64,13 @@ function App(): React.JSX.Element {
 					console.warn("Permission request failed:", permError);
 				}
 
+				// Request Notifee notification permission (Android 13+)
+				const notifeeSettings = await notifee.requestPermission();
+				console.log(
+					"Notifee permission status:",
+					notifeeSettings.authorizationStatus,
+				);
+
 				// Create default notification channel
 				await notifee.createChannel({
 					id: "default",
