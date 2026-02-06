@@ -103,13 +103,21 @@ function App(): React.JSX.Element {
 				(remoteMessage.data as any) || {};
 
 			if (type === "notification") {
+				// Ensure channel exists (required on Android)
+				await notifee.createChannel({
+					id: "default",
+					name: "Default Channel",
+					importance: 4, // AndroidImportance.HIGH
+				});
 				await notifee.displayNotification({
 					title: (title as string) || "OpenClaw",
 					body: (body as string) || "",
 					android: {
 						channelId: "default",
+						pressAction: { id: "default" },
 					},
 				});
+				console.log("Foreground notification displayed:", title, body);
 			} else if (type === "call") {
 				const {
 					displayIncomingCall,
