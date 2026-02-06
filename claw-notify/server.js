@@ -31,6 +31,7 @@ if (fs.existsSync(serviceAccountPath)) {
 
 // In-memory device store
 const devices = new Map();
+const callContexts = new Map(); // callId -> { message, callbackUrl, callerName }
 
 app.get("/", (req, res) => {
 	res.send("Claw Notify Server Running");
@@ -79,11 +80,25 @@ app.post("/notify", async (req, res) => {
 
 // Call endpoint
 app.post("/call", async (req, res) => {
-	const { deviceId = "android-main" } = req.body;
+	const {
+		deviceId = "android-main",
+		message: callMsg,
+		callbackUrl,
+		callerName,
+	} = req.body;
 	const token = devices.get(deviceId);
 	if (!token) return res.status(404).send("No device registered");
 
-	const uuid = crypto.randomUUID();
+	const callId = crypto.randomUUID();
+
+	// Store call context for WebSocket session
+	callContexts.set(callId, {
+		message: callMsg,
+		callbackUrl,
+		callerName,
+		deviceId,
+	});
+
 	// PUBLIC_URL must be the Cloudflare Tunnel URL (wss://...)
 	const serverUrl =
 		process.env.PUBLIC_URL || "wss://your-tunnel-url.trycloudflare.com";
@@ -92,11 +107,12 @@ app.post("/call", async (req, res) => {
 		token,
 		data: {
 			type: "call",
-			uuid,
-			callerName: "OpenClaw AI",
+			uuid: callId,
+			callId,
+			callerName: callerName || "OpenClaw AI",
 			priority: "high",
 			// App connects here
-			serverUrl,
+			serverUrl: callMsg ? `${serverUrl}?callId=${callId}` : serverUrl,
 		},
 	};
 
@@ -107,7 +123,7 @@ app.post("/call", async (req, res) => {
 		} else {
 			console.log("Mock FCM: Call trigger would be sent", message);
 		}
-		res.send({ status: "Calling", uuid });
+		res.send({ status: "Calling", uuid: callId, callId });
 	} catch (error) {
 		console.error("Error sending FCM call trigger:", error);
 		res.status(500).send("Failed to trigger call");
@@ -123,8 +139,15 @@ const GEMINI_URL =
 
 const wss = new WebSocket.Server({ server });
 
-wss.on("connection", (appSocket) => {
-	console.log("App connected for audio session");
+wss.on("connection", (appSocket, req) => {
+	const url = new URL(req.url, `http://${req.headers.host}`);
+	const callId = url.searchParams.get("callId");
+	const callContext = callId ? callContexts.get(callId) : null;
+	const deviceId = callContext?.deviceId || "unknown";
+
+	console.log(
+		`App connected for audio session. CallId: ${callId}, DeviceId: ${deviceId}`,
+	);
 
 	if (!process.env.GEMINI_API_KEY) {
 		console.error("GEMINI_API_KEY is missing in .env");
@@ -150,13 +173,30 @@ wss.on("connection", (appSocket) => {
 			setup: {
 				model: "models/gemini-2.0-flash-exp",
 				generationConfig: {
-					responseModalities: ["AUDIO"],
+					responseModalities: ["AUDIO", "TEXT"],
 					speechConfig: {
 						voiceConfig: { prebuiltVoiceConfig: { voiceName: "Puck" } },
 					},
 				},
 			},
 		};
+
+		if (callContext && callContext.message) {
+			setupMsg.setup.systemInstruction = {
+				parts: [
+					{
+						text: `You are a voice assistant making a call on behalf of an AI system.
+Your task:
+1. First, say the following message exactly: "${callContext.message}"
+2. Then wait for the user's response
+3. After the user responds, acknowledge briefly and end the conversation
+
+Always respond in the same language as the initial message.`,
+					},
+				],
+			};
+		}
+
 		geminiWs.send(JSON.stringify(setupMsg));
 	});
 
@@ -191,10 +231,33 @@ wss.on("connection", (appSocket) => {
 			}
 
 			// Gemini 2.0 Flash Live API response structure
-			const audioData =
-				response.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
-			if (audioData) {
-				appSocket.send(JSON.stringify({ type: "audio", payload: audioData }));
+			if (response.serverContent?.modelTurn?.parts) {
+				for (const part of response.serverContent.modelTurn.parts) {
+					// Handle Audio
+					if (part.inlineData?.data) {
+						appSocket.send(
+							JSON.stringify({ type: "audio", payload: part.inlineData.data }),
+						);
+					}
+
+					// Handle Transcription (Text)
+					if (part.text) {
+						console.log(`Transcription: ${part.text}`);
+						if (callContext?.callbackUrl) {
+							fetch(callContext.callbackUrl, {
+								method: "POST",
+								headers: { "Content-Type": "application/json" },
+								body: JSON.stringify({
+									callId,
+									transcription: part.text,
+									deviceId,
+								}),
+							}).catch((err) =>
+								console.error("Error sending callback:", err.message),
+							);
+						}
+					}
+				}
 			}
 		} catch (error) {
 			console.error("Error processing Gemini message:", error);
@@ -217,6 +280,9 @@ wss.on("connection", (appSocket) => {
 	// Cleanup
 	appSocket.on("close", () => {
 		console.log("App socket closed");
+		if (callId) {
+			callContexts.delete(callId);
+		}
 		if (
 			geminiWs.readyState === WebSocket.OPEN ||
 			geminiWs.readyState === WebSocket.CONNECTING
