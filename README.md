@@ -68,9 +68,14 @@ npx react-native run-android
 #### Option C: Cloud Build (No SDK Installed)
 If you don't have the Android SDK installed locally, you can build the APK using GitHub Actions.
 1. Push this code to a GitHub repository.
-2. Go to the "Actions" tab.
-3. Select the "Build Android APK" workflow.
-4. Once finished, download the `app-debug` artifact.
+2. **Setup Firebase Secret**:
+    - Go to GitHub Repo **Settings** -> **Secrets and variables** -> **Actions**.
+    - Create a **"New repository secret"**.
+    - Name: `GOOGLE_SERVICES_JSON`.
+    - Value: Paste the content of your `google-services.json` file.
+3. Go to the **"Actions"** tab.
+4. Select the **"Build Android APK"** workflow.
+5. Once finished, download the `app-debug` artifact.
 
 ### 3. Test the System
 **To Pair the Device:**
