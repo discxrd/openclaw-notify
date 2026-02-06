@@ -143,19 +143,57 @@ function App(): React.JSX.Element {
 			return;
 		}
 
-		// Clean URL for Markdown link
 		const cleanUrl = serverUrl.replace(/\/$/, "");
 
-		const markdown = `# OpenClaw Mobile Device
-- **Device ID**: ${deviceId}
-- **FCM Token**: ${fcmToken}
-- **Audio Support**: 16kHz PCM
-- **Actions**:
-  - [Call Me](${cleanUrl}/call?deviceId=${deviceId})
-  - [Notify Me](${cleanUrl}/notify?deviceId=${deviceId})`;
+		const skillConfig = `# Claw Notify Skill
 
-		Clipboard.setString(markdown);
-		Alert.alert("Success", "Configuration copied to clipboard!");
+## Описание
+Этот скилл позволяет инициировать голосовой звонок через Gemini на мобильное устройство пользователя.
+
+## Что делает
+- Отправляет push-уведомление на телефон через FCM
+- Телефон просыпается и показывает экран входящего звонка
+- При ответе устанавливается 2-way аудио соединение с Gemini
+
+## Как вызывать
+Используй HTTP POST запрос на сервер:
+
+### Позвонить пользователю
+POST ${cleanUrl}/call
+Content-Type: application/json
+
+{
+  "deviceId": "${deviceId}"
+}
+
+### Отправить уведомление
+POST ${cleanUrl}/notify  
+Content-Type: application/json
+
+{
+  "deviceId": "${deviceId}",
+  "title": "Заголовок",
+  "body": "Текст уведомления"
+}
+
+## Bootstrap Script (call.sh)
+Сохрани на сервере и запускай: ./call.sh
+
+\`\`\`sh
+#!/bin/sh
+curl -X POST ${cleanUrl}/call \\
+  -H "Content-Type: application/json" \\
+  -d '{"deviceId":"${deviceId}"}'
+\`\`\`
+
+## Конфигурация устройства
+- Device ID: ${deviceId}
+- FCM Token: ${fcmToken}
+- Server URL: ${cleanUrl}
+- Audio: 16kHz PCM input, 24kHz PCM output`;
+
+		Clipboard.setString(skillConfig);
+		Alert.alert("Success", "Skill configuration copied to clipboard!");
 	};
 
 	const handleRegister = async () => {
