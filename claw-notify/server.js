@@ -49,7 +49,7 @@ app.post("/register", (req, res) => {
 
 // Notify endpoint
 app.post("/notify", async (req, res) => {
-	const { text, deviceId = "android-main" } = req.body;
+	const { title, body, text, deviceId = "android-main" } = req.body;
 	const token = devices.get(deviceId);
 	if (!token) return res.status(404).send("No device registered");
 
@@ -57,8 +57,8 @@ app.post("/notify", async (req, res) => {
 		token,
 		data: {
 			type: "notification",
-			title: "OpenClaw",
-			body: text || "Hello from OpenClaw",
+			title: title || "OpenClaw",
+			body: body || text || "Hello from OpenClaw",
 			priority: "high",
 		},
 	};
