@@ -100,7 +100,7 @@ In a new terminal:
 # Replace SERVER_URL with your Cloudflare URL (wss://...)
 # If testing on Emulator, you can skip PUBLIC_URL and it defaults to mock
 cd claw-notify
-node trigger-call.js
+node trigger-call.js <deviceId> "Optional message" "Optional callbackUrl"
 ```
 
 **To Send a Notification:**

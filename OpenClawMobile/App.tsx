@@ -178,8 +178,14 @@ POST ${cleanUrl}/call
 Content-Type: application/json
 
 {
-  "deviceId": "${deviceId}"
+  "deviceId": "${deviceId}",
+  "message": "Ваше сообщение для озвучки",
+  "callbackUrl": "https://your-webhook.com/response"
 }
+
+**Параметры:**
+- \`message\`: Текст, который Gemini произнесет пользователю
+- \`callbackUrl\`: URL для получения ответа пользователя (транскрипция)
 
 ### Отправить уведомление
 POST ${cleanUrl}/notify  
@@ -198,14 +204,18 @@ Content-Type: application/json
 #!/bin/sh
 curl -X POST ${cleanUrl}/call \\
   -H "Content-Type: application/json" \\
-  -d '{"deviceId":"${deviceId}"}'
+  -d '{
+    "deviceId":"${deviceId}",
+    "message":"Привет, это проверка связи",
+    "callbackUrl":"https://webhook.site/your-id"
+  }'
 \`\`\`
 
 ## Конфигурация устройства
 - Device ID: ${deviceId}
 - FCM Token: ${fcmToken}
 - Server URL: ${cleanUrl}
-- Audio: 16kHz PCM input, 24kHz PCM output`;
+- Audio: 16kHz PCM input, 24kHz PCM output\`;
 
 		Clipboard.setString(skillConfig);
 		Alert.alert("Success", "Skill configuration copied to clipboard!");
