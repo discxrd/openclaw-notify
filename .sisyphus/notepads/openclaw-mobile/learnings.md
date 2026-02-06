@@ -45,3 +45,5 @@
 - Running "tsc" on a single file (e.g., "npx tsc src/file.ts") may ignore "tsconfig.json" and "types.d.ts", leading to false type errors for non-typed modules.
 - Verification of type safety should always rely on the project-wide "tsc" command as configured in the repo.
 - Renamed GOOGLE_GENAI_API_KEY to GEMINI_API_KEY to match server.js expectations.
+
+- Updated README.md to guide users on setting up GOOGLE_SERVICES_JSON as a GitHub Secret for Cloud Build, improving security by avoiding committing the file.
